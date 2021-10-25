@@ -10,9 +10,10 @@
 #include <unordered_map>
 
 #include "index.h"
+#include "iterator.h"
 #include "space.h"
 #include "storage.h"
-#include "iterator.h"
+
 
 namespace featureform {
 
@@ -24,7 +25,6 @@ class EmbeddingHub {
   std::optional<std::shared_ptr<Space>> get_space(const std::string& name);
   std::shared_ptr<Space> create_space(const std::string& name);
   Iterator iterator() const;
-
 
  private:
   EmbeddingHub(std::filesystem::path base_path,

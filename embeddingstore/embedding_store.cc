@@ -8,6 +8,7 @@
 
 #include "embeddingstore/embedding_store_meta.pb.h"
 #include "rocksdb/db.h"
+#include "iterator.h"
 
 namespace featureform {
 
@@ -21,13 +22,13 @@ std::shared_ptr<EmbeddingHub> EmbeddingHub::load_or_create(std::string path) {
   options.create_if_missing = true;
   rocksdb::DB* db_ptr;
   rocksdb::Status status = rocksdb::DB::Open(options, metadata_path, &db_ptr);
-  std::unique_ptr<rocksdb::DB> db(db_ptr);
+  std::shared_ptr<rocksdb::DB> db(db_ptr);
   return std::shared_ptr<EmbeddingHub>(
       new EmbeddingHub(metadata_path, std::move(db)));
 }
 
 EmbeddingHub::EmbeddingHub(std::filesystem::path base_path,
-                           std::unique_ptr<rocksdb::DB> db)
+                           std::shared_ptr<rocksdb::DB> db)
     : base_path_{base_path}, db_{std::move(db)}, loaded_spaces_{} {}
 
 std::shared_ptr<Space> EmbeddingHub::create_space(const std::string& name) {
@@ -64,6 +65,9 @@ std::optional<std::shared_ptr<Space>> EmbeddingHub::get_space(
 bool EmbeddingHub::is_space_loaded(const std::string& name) const {
   return loaded_spaces_.find(name) != loaded_spaces_.end();
 }
+
+Iterator EmbeddingHub::iterator() const { return Iterator(db_); }
+
 
 }  // namespace embedding
 }  // namespace featureform

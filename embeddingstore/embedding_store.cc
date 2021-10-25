@@ -24,12 +24,12 @@ std::shared_ptr<EmbeddingHub> EmbeddingHub::load_or_create(std::string path) {
   rocksdb::Status status = rocksdb::DB::Open(options, metadata_path, &db_ptr);
   std::shared_ptr<rocksdb::DB> db(db_ptr);
   return std::shared_ptr<EmbeddingHub>(
-      new EmbeddingHub(metadata_path, std::move(db)));
+      new EmbeddingHub(metadata_path, db));
 }
 
 EmbeddingHub::EmbeddingHub(std::filesystem::path base_path,
                            std::shared_ptr<rocksdb::DB> db)
-    : base_path_{base_path}, db_{std::move(db)}, loaded_spaces_{} {}
+    : base_path_{base_path}, db_{db}, loaded_spaces_{} {}
 
 std::shared_ptr<Space> EmbeddingHub::create_space(const std::string& name) {
   if (is_space_loaded(name)) {

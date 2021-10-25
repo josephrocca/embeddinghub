@@ -14,7 +14,6 @@
 #include "space.h"
 #include "storage.h"
 
-
 namespace featureform {
 
 namespace embedding {

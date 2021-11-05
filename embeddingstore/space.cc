@@ -9,7 +9,9 @@
 #include <filesystem>
 
 #include "embeddingstore/embedding_store_meta.pb.h"
+#include "iterator.h"
 #include "rocksdb/db.h"
+
 
 namespace featureform {
 

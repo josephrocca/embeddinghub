@@ -297,7 +297,7 @@ grpc::Status EmbeddingHubService::GetVersionEntry(
   resp.set_description(version_opt->desc());
   resp.set_owner(version_opt->owner());
   for (int i = 0; i < version_opt->tags().size(); i++) {
-    resp.add_tags(version_opt->tags()[i])
+    resp.add_tags(version_opt->tags()[i]);
   }
   resp.set_created(version_opt->created());
   resp.set_revision(version_opt->revision());
@@ -324,7 +324,7 @@ grpc::Status EmbeddingHubService::ListEntries(
       ver_entry.set_description(version_opt->desc());
       ver_entry.set_owner(version_opt->owner());
       for (int i = 0; i < version_opt->tags().size(); i++) {
-        ver_entry.add_tags(version_opt->tags()[i])
+        ver_entry.add_tags(version_opt->tags()[i]);
       }
       ver_entry.set_created(version_opt->created());
       ver_entry.set_revision(version_opt->revision());

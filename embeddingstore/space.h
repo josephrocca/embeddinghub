@@ -9,6 +9,7 @@
 #include <optional>
 #include <unordered_map>
 
+#include "iterator.h"
 #include "version.h"
 
 namespace featureform {

@@ -328,7 +328,7 @@ grpc::Status EmbeddingHubService::ListEntries(
       }
       ver_entry.set_created(version_opt->created());
       ver_entry.set_revision(version_opt->revision());
-      resp.add_VersionEntry(ver_entry);
+      resp.add_version_entry(ver_entry);
     }
     writer->Write(resp);
   }

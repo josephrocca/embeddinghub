@@ -18,7 +18,7 @@ message ListEntriesRequest {
 
 message ListEntriesResponse {
   string name = 1;
-  repeated VersionEntry = 2;
+  repeated VersionEntry version_entry = 2;
 }
 
 message GetSpaceRequest {

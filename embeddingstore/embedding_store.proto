@@ -16,6 +16,15 @@ service EmbeddingHub {
   rpc NearestNeighbor(NearestNeighborRequest)  returns (NearestNeighborResponse) {}
   rpc Download(DownloadRequest) returns (stream DownloadResponse) {}
   rpc DownloadSpaces(DownloadSpacesRequest) returns (stream DownloadSpacesResponse) {}
+  rpc ListVersions(ListVersionsRequest) returns (stream ListVersionsResponse) {}
+}
+
+message ListVersionsRequest {
+  string space = 1;
+}
+
+message ListVersionsResponse {
+  string version = 1;
 }
 
 message CreateSpaceRequest {

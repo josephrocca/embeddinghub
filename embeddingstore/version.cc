@@ -4,6 +4,8 @@
 
 #include "version.h"
 
+#include <google/protobuf/util/time_util.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -16,29 +18,51 @@ namespace featureform {
 
 namespace embedding {
 
-std::shared_ptr<Version> Version::load_or_create(std::string path,
-                                                 std::string space,
-                                                 std::string name, int dims,
-                                                 bool immutable) {
+// creates a new version with a rocksdb of embeddings
+std::shared_ptr<Version> Version::load_or_create(
+    std::string path, std::string space, std::string name, int dims,
+    std::string desc, std::string owner, std::vector<std::string> tags,
+    std::string created, std::string revision, bool immutable) {
   auto storage = EmbeddingStorage::load_or_create(path, dims);
-  return std::unique_ptr<Version>(
-      new Version(std::move(storage), space, name, dims, immutable));
+  return std::unique_ptr<Version>(new Version(std::move(storage), path, space,
+                                              name, dims, desc, owner, tags,
+                                              created, revision.immutable));
 }
 
-Version::Version(std::shared_ptr<EmbeddingStorage> storage, std::string space,
-                 std::string name, int dims, bool immutable)
+Version::Version(std::shared_ptr<EmbeddingStorage> storage, std::string path,
+                 std::string space, std::string name, int dims,
+                 std::string desc, std::string owner,
+                 std::vector<std::string> tags, std::string created,
+                 std::string revision, std::string bool immutable)
     : storage_{std::move(storage)},
+      path_{path},
       space_{space},
       name_{name},
       dims_{dims},
-      immutable_{immutable},
+      desc_{desc},
+      owner_{owner},
+      tags_{tags},
+      created_{created},
+      revision_{revision} immutable_{immutable},
       idx_{nullptr} {}
 
 std::string Version::space() const { return space_; }
 
+std::string Version::path() const { return path_; }
+
 std::string Version::name() const { return name_; }
 
 int Version::dims() const { return dims_; }
+
+std::string Version::desc() const { return desc_; }
+
+std::string Version::owner() const { return owner_; }
+
+std::vector<std::string> Version::tags() const { return tags_; }
+
+std::string Version::created() const { return created_; }
+
+std::string Version::revision() const { return revision_; }
 
 bool Version::immutable() const { return immutable_; }
 

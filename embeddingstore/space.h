@@ -20,15 +20,20 @@ class Space {
   static std::shared_ptr<Space> load_or_create(
       const std::filesystem::path& path, const std::string& name);
   std::optional<std::shared_ptr<Version>> get_version(const std::string& name);
-  std::shared_ptr<Version> create_version(const std::string& name, int dims);
+  std::shared_ptr<Version> create_version(const std::string& name, int dims,
+                                          std::string& desc, std::string& owner,
+                                          std::vector<std::string&> tags,
+                                          std::string& created,
+                                          std::string& revision);
   bool operator==(const Space& other) const;
+  Iterator iterator() const;
 
  private:
   Space(std::filesystem::path base_path, std::unique_ptr<rocksdb::DB> db);
   bool is_version_loaded(const std::string& name) const;
   std::filesystem::path base_path_;
   std::string name_;
-  std::unique_ptr<rocksdb::DB> db_;
+  std::shared_ptr<rocksdb::DB> db_;
   std::unordered_map<std::string, std::shared_ptr<Version>> loaded_versions_;
 };
 }  // namespace embedding

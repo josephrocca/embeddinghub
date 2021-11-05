@@ -10,6 +10,8 @@
 #include "iterator.h"
 #include "rocksdb/db.h"
 
+constexpr auto DEFAULT_VERSION = "initial";
+
 namespace featureform {
 
 namespace embedding {
@@ -30,7 +32,8 @@ EmbeddingHub::EmbeddingHub(std::filesystem::path base_path,
                            std::shared_ptr<rocksdb::DB> db)
     : base_path_{base_path}, db_{db}, loaded_spaces_{} {}
 
-std::shared_ptr<Space> EmbeddingHub::create_space(const std::string& name) {
+std::shared_ptr<Space> EmbeddingHub::create_space(
+    const std::string& name, const std::string& default_version) {
   if (is_space_loaded(name)) {
     return loaded_spaces_.at(name);
   }
@@ -38,10 +41,11 @@ std::shared_ptr<Space> EmbeddingHub::create_space(const std::string& name) {
   auto path = base_path_ / name;
   entry.set_path(path);
   entry.set_name(name);
+  entry.set_default_version(DEFAULT_VERSION);
   std::string serialized;
   entry.SerializeToString(&serialized);
   db_->Put(rocksdb::WriteOptions(), name, serialized);
-  return Space::load_or_create(path, name);
+  return Space::load_or_create(path, name, default_version);
 }
 
 std::optional<std::shared_ptr<Space>> EmbeddingHub::get_space(

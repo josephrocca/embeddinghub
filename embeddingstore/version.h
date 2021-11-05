@@ -20,14 +20,20 @@ namespace embedding {
 
 class Version {
  public:
-  static std::shared_ptr<Version> load_or_create(std::string path,
-                                                 std::string space,
-                                                 std::string name, int dims,
-                                                 bool immutable = false);
+  static std::shared_ptr<Version> load_or_create(
+      std::string path, std::string space, std::string name, int dims,
+      std::string desc, std::string owner, std::vector<std::string> tags,
+      std::string created, std::string revision, bool immutable = false);
   Error set(std::string key, std::vector<float> value);
   std::string space() const;
+  std::string path() const;
   std::string name() const;
   int dims() const;
+  std::string desc() const;
+  std::string owner() const;
+  std::vector<std::string> tags() const;
+  std::string created() const;
+  std::string revision() const;
   bool immutable() const;
   void make_immutable();
   std::vector<float> get(const std::string& key) const;
@@ -36,12 +42,20 @@ class Version {
   std::shared_ptr<const ANNIndex> get_ann_index() const;
 
  private:
-  Version(std::shared_ptr<EmbeddingStorage> storage, std::string space,
-          std::string name, int dims, bool immutable);
+  Version(std::shared_ptr<EmbeddingStorage> storage, std::string path,
+          std::string space, std::string name, int dims, std::string desc,
+          std::string owner, std::vector<std::string> tags, std::string created,
+          std::string revision, bool immutable);
   std::shared_ptr<EmbeddingStorage> storage_;
   std::string space_;
+  std::string path_;
   std::string name_;
   int dims_;
+  std::string desc_;
+  std::string owner_;
+  std::vector<std::string> tags_;
+  std::string created_;
+  std::string revision_;
   bool immutable_;
   std::shared_ptr<ANNIndex> idx_;
 };

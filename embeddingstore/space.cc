@@ -4,6 +4,8 @@
 
 #include "space.h"
 
+#include <google/protobuf/util/time_util.h>
+
 #include <filesystem>
 
 #include "embeddingstore/embedding_store_meta.pb.h"
@@ -13,22 +15,31 @@ namespace featureform {
 
 namespace embedding {
 
-std::shared_ptr<Space> Space::load_or_create(const std::filesystem::path& path,
-                                             const std::string& name) {
+std::shared_ptr<Space> Space::load_or_create(
+    const std::filesystem::path& path, const std::string& name,
+    const std::string& default_version) {
   std::filesystem::create_directories(path);
   rocksdb::Options options;
   options.create_if_missing = true;
   rocksdb::DB* db_ptr;
   rocksdb::Status status = rocksdb::DB::Open(options, path, &db_ptr);
-  std::unique_ptr<rocksdb::DB> db(db_ptr);
+  std::shared_ptr<rocksdb::DB> db(db_ptr);
   return std::shared_ptr<Space>(new Space(path, std::move(db)));
 }
 
-Space::Space(std::filesystem::path base_path, std::unique_ptr<rocksdb::DB> db)
-    : base_path_{base_path}, db_{std::move(db)}, loaded_versions_{} {}
+Space::Space(std::filesystem::path base_path, std::unique_ptr<rocksdb::DB> db,
+             std::string& name)
+    : base_path_{base_path},
+      db_{std::move(db)},
+      name_{name},
+      loaded_versions_{} {}
 
 std::shared_ptr<Version> Space::create_version(const std::string& name,
-                                               int dims) {
+                                               int dims, std::string& desc,
+                                               std::string& owner,
+                                               std::vector<std::string&> tags,
+                                               std::string& created,
+                                               std::string& revision) {
   if (is_version_loaded(name)) {
     return loaded_versions_.at(name);
   }
@@ -39,11 +50,18 @@ std::shared_ptr<Version> Space::create_version(const std::string& name,
   entry.set_space(space_name);
   entry.set_name(name);
   entry.set_dims(dims);
-  std::string serialized;
+  entry.set_description(desc);
+  entry.set_owner(owner);
+  for (int i = 0; i < tags.size(); i++) {
+    entry.add_tags(tags[i])
+  }
+  entry.set_created(created);
+  entry.set_revision(revision) std::string serialized;
   entry.SerializeToString(&serialized);
   auto key = space_name + " " + name;
   db_->Put(rocksdb::WriteOptions(), key, serialized);
-  auto version = Version::load_or_create(path, space_name, name, dims);
+  auto version = Version::load_or_create(path, space_name, name, dims, desc,
+                                         owner, tags, created, revision);
   version->create_ann_index();
   loaded_versions_.emplace(name, version);
   return version;
@@ -63,8 +81,9 @@ std::optional<std::shared_ptr<Version>> Space::get_version(
   }
   auto entry = proto::VersionEntry();
   entry.ParseFromString(serialized);
-  auto version = Version::load_or_create(entry.path(), entry.space(),
-                                         entry.name(), entry.dims());
+  auto version = Version::load_or_create(
+      entry.path(), entry.space(), entry.name(), entry.dims(), entry.desc(),
+      entry.owner(), entry.tags(), entry.created(), entry.revision());
   version->create_ann_index();
   loaded_versions_.emplace(name, version);
   return std::optional{version};
@@ -77,6 +96,8 @@ bool Space::is_version_loaded(const std::string& name) const {
 bool Space::operator==(const Space& other) const {
   return base_path_ == other.base_path_ && name_ == other.name_;
 }
+
+Iterator Space::iterator() const { return Iterator(db_); }
 
 }  // namespace embedding
 }  // namespace featureform

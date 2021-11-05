@@ -6,9 +6,34 @@ syntax = "proto3";
 
 package featureform.embedding.proto;
 
+service EmbeddingHubMeta {
+  rpc GetSpaceEntry(GetSpaceRequest) returns (SpaceEntry) {}
+  rpc GetVersionEntry(GetVersionRequest) returns (VersionEntry) {}
+  rpc ListEntries(ListEntriesRequest) returns (stream ListEntriesResponse) {}
+}
+
+message ListEntriesRequest {
+  //purposely empty
+}
+
+message ListEntriesResponse {
+  string name = 1;
+  repeated VersionEntry = 2;
+}
+
+message GetSpaceRequest {
+  string space = 1;
+}
+
+message GetVersionRequest {
+  string space = 1;
+  string version = 2;
+}
+
 message SpaceEntry {
   string path = 1;
   string name = 2;
+  string default_version = 3;
 }
 
 message VersionEntry {
@@ -16,4 +41,10 @@ message VersionEntry {
   string space = 2;
   string name = 3;
   int32 dims = 4;
+  string description = 5;
+  string owner = 6;
+  repeated string tags = 7;
+  string created = 8;
+  string revision = 9;
 }
+

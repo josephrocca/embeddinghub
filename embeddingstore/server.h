@@ -55,6 +55,22 @@ class EmbeddingHubService final : public proto::EmbeddingHub::Service {
       grpc::ServerContext* context, const proto::DownloadSpacesRequest* request,
       grpc::ServerWriter<proto::DownloadSpacesResponse>* writer) override;
 
+  grpc::Status ListVersions(
+      grpc::ServerContext* context, const proto::ListVersionsRequest* request,
+      grpc::ServerWriter<proto::ListVersionsResponse>* writer) override;
+
+  grpc::Status GetSpaceEntry(grpc::ServerContext* context,
+                             const proto::GetSpaceRequest* request,
+                             proto::SpaceEntry* resp) override;
+
+  grpc::Status GetVersionEntry(grpc::ServerContext* context,
+                               const proto::GetVersionRequest* request,
+                               proto::VersionEntry* resp) override;
+
+  grpc::Status ListEntries(
+      grpc::ServerContext* context, const proto::ListEntriesRequest* request,
+      grpc::ServerWriter<proto::ListEntriesResponse>* writer) override;
+
  private:
   std::optional<std::shared_ptr<Version>> GetVersion(
       const std::string& space, const std::string& version);

@@ -24,6 +24,12 @@ using ::featureform::embedding::proto::FreezeSpaceRequest;
 using ::featureform::embedding::proto::FreezeSpaceResponse;
 using ::featureform::embedding::proto::GetRequest;
 using ::featureform::embedding::proto::GetResponse;
+using ::featureform::embedding::proto::GetSpaceRequest;
+using ::featureform::embedding::proto::GetVersionRequest;
+using ::featureform::embedding::proto::ListEntriesRequest;
+using ::featureform::embedding::proto::ListEntriesResponse;
+using ::featureform::embedding::proto::ListVersionsRequest;
+using ::featureform::embedding::proto::ListVersionsResponse;
 using ::featureform::embedding::proto::MultiGetRequest;
 using ::featureform::embedding::proto::MultiGetResponse;
 using ::featureform::embedding::proto::MultiSetRequest;
@@ -32,6 +38,8 @@ using ::featureform::embedding::proto::NearestNeighborRequest;
 using ::featureform::embedding::proto::NearestNeighborResponse;
 using ::featureform::embedding::proto::SetRequest;
 using ::featureform::embedding::proto::SetResponse;
+using ::featureform::embedding::proto::SpaceEntry;
+using ::featureform::embedding::proto::VersionEntry;
 using ::grpc::Server;
 using ::grpc::ServerBuilder;
 using ::grpc::ServerContext;
@@ -46,6 +54,11 @@ namespace featureform {
 namespace embedding {
 
 constexpr auto DEFAULT_VERSION = "initial";
+constexpr auto DEFAULT_DESCRIPTION = "default description";
+constexpr auto DEFAULT_OWNER = "owner";
+constexpr auto DEFAULT_TAGS = {"tag_1", "tag_2"};
+constexpr auto DEFAULT_CREATED = "2011-03-10T11:23:56.123+0100";
+constexpr auto DEFAULT_REVISION = "2011-03-10T11:23:56.123+0100";
 
 std::vector<float> copy_embedding_to_vector(const Embedding& embedding) {
   auto vals = embedding.values();
@@ -66,8 +79,10 @@ grpc::Status EmbeddingHubService::CreateSpace(ServerContext* context,
                                               const CreateSpaceRequest* request,
                                               CreateSpaceResponse* resp) {
   std::unique_lock<std::mutex> lock(mtx_);
-  auto space = store_->create_space(request->name());
-  space->create_version(DEFAULT_VERSION, request->dims());
+  auto space = store_->create_space(request->name(), DEFAULT_VERSION);
+  space->create_version(DEFAULT_VERSION, request->dims(), DEFAULT_DESCRIPTION,
+                        DEFAULT_OWNER, DEFAULT_TAGS, DEFAULT_CREATED,
+                        DEFAULT_REVISION);
   return Status::OK;
 }
 
@@ -237,6 +252,19 @@ grpc::Status EmbeddingHubService::DownloadSpaces(
   return Status::OK;
 }
 
+grpc::Status EmbeddingHubService::ListVersions(
+    ServerContext* context, const ListVersionsRequest* request,
+    ServerWriter<ListVersionsResponse>* writer) {
+  std::unique_lock<std::mutex> lock(mtx_);
+  auto iter = request->space()->iterator();
+  while (iter.scan()) {
+    ListVersionsResponse resp;
+    resp.set_version(iter.key());
+    writer->Write(resp);
+  }
+  return Status::OK;
+}
+
 std::optional<std::shared_ptr<Version>> EmbeddingHubService::GetVersion(
     const std::string& space_name, const std::string& version_name) {
   auto space_opt = store_->get_space(space_name);
@@ -245,6 +273,68 @@ std::optional<std::shared_ptr<Version>> EmbeddingHubService::GetVersion(
   }
   return (*space_opt)->get_version(version_name);
 }
+
+grpc::Status EmbeddingHubService::GetSpaceEntry(
+    grpc::ServerContext* context, const proto::GetSpaceRequest* request,
+    proto::SpaceEntry* resp) {
+  std::unique_lock<std::mutex> lock(mtx_);
+  auto space_opt = store_->get_space(request->name());
+  resp.set_path(space_opt->path());
+  resp.set_name(space_opt->name());
+  resp.set_default_version(space_opt->default_version());
+  return Status::OK;
+}
+
+grpc::Status EmbeddingHubService::GetVersionEntry(
+    grpc::ServerContext* context, const proto::GetVersionRequest* request,
+    proto::VersionEntry* resp) {
+  std::unique_lock<std::mutex> lock(mtx_);
+  auto version_opt =
+      store_->get_space(request->space())->get_version(request->version());
+  resp.set_path(version_opt->path());
+  resp.set_space(version_opt->space());
+  resp.set_name(version_opt->name());
+  resp.set_description(version_opt->desc());
+  resp.set_owner(version_opt->owner());
+  for (int i = 0; i < version_opt->tags().size(); i++) {
+    resp.add_tags(version_opt->tags()[i])
+  }
+  resp.set_created(version_opt->created());
+  resp.set_revision(version_opt->revision());
+  return Status::OK;
+}
+
+grpc::Status EmbeddingHubService::ListEntries(
+    grpc::ServerContext* context, const proto::ListEntriesRequest* request,
+    grpc::ServerWriter<proto::ListEntriesResponse>* writer) {
+  std::unique_lock<std::mutex> lock(mtx_);
+  auto space_iter = store_->iterator();
+  auto space_opt = store_->get_space(request->space());
+  while (iter.scan()) {
+    ListEntriesResponse resp;
+    resp.set_name(iter.key());
+    auto space_opt = store_->get_space(iter.key());
+    auto version_iter = space_opt->iterator();
+    while (version_iter.scan()) {
+      auto version_opt = space_opt->get_version(version_iter.key());
+      VersionEntry ver_entry;
+      ver_entry.set_path(version_opt->path());
+      ver_entry.set_space(version_opt->space());
+      ver_entry.set_name(version_opt->name());
+      ver_entry.set_description(version_opt->desc());
+      ver_entry.set_owner(version_opt->owner());
+      for (int i = 0; i < version_opt->tags().size(); i++) {
+        ver_entry.add_tags(version_opt->tags()[i])
+      }
+      ver_entry.set_created(version_opt->created());
+      ver_entry.set_revision(version_opt->revision());
+      resp.add_VersionEntry(ver_entry);
+    }
+    writer->Write(resp);
+  }
+  return Status::OK;
+}
+
 }  // namespace embedding
 }  // namespace featureform
 

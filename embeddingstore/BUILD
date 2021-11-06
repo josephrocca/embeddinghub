@@ -134,6 +134,13 @@ cc_grpc_library(
     deps = [":embedding_store_cc_proto"],
 )
 
+cc_grpc_library(
+    name="embedding_store_meta_grpc",
+    srcs = [":embedding_store_meta_proto"],
+    grpc_only = True,
+    deps = [":embedding_store_meta_cc_proto"],
+)
+
 proto_library(
     name = "embedding_store_meta_proto",
     srcs = ["embedding_store_meta.proto"],

@@ -12,7 +12,6 @@
 #include "iterator.h"
 #include "rocksdb/db.h"
 
-
 namespace featureform {
 
 namespace embedding {

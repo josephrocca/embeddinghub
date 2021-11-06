@@ -256,7 +256,11 @@ grpc::Status EmbeddingHubService::ListVersions(
     ServerContext* context, const ListVersionsRequest* request,
     ServerWriter<ListVersionsResponse>* writer) {
   std::unique_lock<std::mutex> lock(mtx_);
-  auto iter = request->space()->iterator();
+  auto space_opt =
+      store_->get_space(request->space()) if (!space_opt.has_value()) {
+    return std::nullopt;
+  }
+  auto iter = space_opt.value()->iterator();
   while (iter.scan()) {
     ListVersionsResponse resp;
     resp.set_version(iter.key());
@@ -279,9 +283,12 @@ grpc::Status EmbeddingHubService::GetSpaceEntry(
     proto::SpaceEntry* resp) {
   std::unique_lock<std::mutex> lock(mtx_);
   auto space_opt = store_->get_space(request->name());
-  resp.set_path(space_opt->path());
-  resp.set_name(space_opt->name());
-  resp.set_default_version(space_opt->default_version());
+  if (!space_opt.has_value()) {
+    return Status(StatusCode::NOT_FOUND, "Not found");
+  }
+  resp.set_path(space_opt.value()->path());
+  resp.set_name(space_opt.value()->name());
+  resp.set_default_version(space_opt.value()->default_version());
   return Status::OK;
 }
 
@@ -289,18 +296,20 @@ grpc::Status EmbeddingHubService::GetVersionEntry(
     grpc::ServerContext* context, const proto::GetVersionRequest* request,
     proto::VersionEntry* resp) {
   std::unique_lock<std::mutex> lock(mtx_);
-  auto version_opt =
-      store_->get_space(request->space())->get_version(request->version());
-  resp.set_path(version_opt->path());
-  resp.set_space(version_opt->space());
-  resp.set_name(version_opt->name());
-  resp.set_description(version_opt->desc());
-  resp.set_owner(version_opt->owner());
-  for (int i = 0; i < version_opt->tags().size(); i++) {
-    resp.add_tags(version_opt->tags()[i]);
+  auto version_opt = GetVersion(request->space(), request->version());
+  if (!version_opt.has_value()) {
+    return Status(StatusCode::NOT_FOUND, "Not found");
   }
-  resp.set_created(version_opt->created());
-  resp.set_revision(version_opt->revision());
+  resp.set_path(version_opt.value()->path());
+  resp.set_space(version_opt.value()->space());
+  resp.set_name(version_opt.value()->name());
+  resp.set_description(version_opt.value()->desc());
+  resp.set_owner(version_opt.value()->owner());
+  for (int i = 0; i < version_opt.value()->tags().size(); i++) {
+    resp.add_tags(version_opt.value()->tags()[i]);
+  }
+  resp.set_created(version_opt.value()->created());
+  resp.set_revision(version_opt.value()->revision());
   return Status::OK;
 }
 
@@ -309,25 +318,27 @@ grpc::Status EmbeddingHubService::ListEntries(
     grpc::ServerWriter<proto::ListEntriesResponse>* writer) {
   std::unique_lock<std::mutex> lock(mtx_);
   auto space_iter = store_->iterator();
-  auto space_opt = store_->get_space(request->space());
   while (iter.scan()) {
     ListEntriesResponse resp;
-    resp.set_name(iter.key());
-    auto space_opt = store_->get_space(iter.key());
-    auto version_iter = space_opt->iterator();
+    auto space_name = iter.key();
+    resp.set_name(space_name);
+    auto space_opt = store_->get_space(space_name);
+    auto name_length = space_name.length();
+    auto version_iter = space_opt.value()->iterator();
     while (version_iter.scan()) {
-      auto version_opt = space_opt->get_version(version_iter.key());
+      auto version_opt = space_opt.value()->get_version(
+          version_iter.key().substr(name_length + 1));
       VersionEntry ver_entry;
-      ver_entry.set_path(version_opt->path());
-      ver_entry.set_space(version_opt->space());
-      ver_entry.set_name(version_opt->name());
-      ver_entry.set_description(version_opt->desc());
-      ver_entry.set_owner(version_opt->owner());
-      for (int i = 0; i < version_opt->tags().size(); i++) {
-        ver_entry.add_tags(version_opt->tags()[i]);
+      ver_entry.set_path(version_opt.value()->path());
+      ver_entry.set_space(version_opt.value()->space());
+      ver_entry.set_name(version_opt.value()->name());
+      ver_entry.set_description(version_opt.value()->desc());
+      ver_entry.set_owner(version_opt.value()->owner());
+      for (int i = 0; i < version_opt.value()->tags().size(); i++) {
+        ver_entry.add_tags(version_opt.value()->tags()[i]);
       }
-      ver_entry.set_created(version_opt->created());
-      ver_entry.set_revision(version_opt->revision());
+      ver_entry.set_created(version_opt.value()->created());
+      ver_entry.set_revision(version_opt.value()->revision());
       resp.add_version_entry(ver_entry);
     }
     writer->Write(resp);

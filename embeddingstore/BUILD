@@ -36,6 +36,8 @@ cc_library(
     deps = [
         ":embedding_store",
         ":embedding_store_grpc",
+        ":embedding_store_meta",
+        ":embedding_store_meta_grpc",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_grpc_grpc//:grpc++_reflection",
     ],

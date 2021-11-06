@@ -9,6 +9,7 @@
 #include "embeddingstore/embedding_store.grpc.pb.h"
 #include "embeddingstore/embedding_store.h"
 #include "embeddingstore/embedding_store_meta.grpc.pb.h"
+#include "embeddingstore/embedding_store_meta.pb.h"
 
 namespace featureform {
 

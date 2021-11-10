@@ -10,6 +10,7 @@
 #include <unordered_map>
 
 #include "index.h"
+#include "iterator.h"
 #include "space.h"
 #include "storage.h"
 
@@ -22,13 +23,14 @@ class EmbeddingHub {
   static std::shared_ptr<EmbeddingHub> load_or_create(std::string path);
   std::optional<std::shared_ptr<Space>> get_space(const std::string& name);
   std::shared_ptr<Space> create_space(const std::string& name);
+  Iterator iterator() const;
 
  private:
   EmbeddingHub(std::filesystem::path base_path,
-               std::unique_ptr<rocksdb::DB> db);
+               std::shared_ptr<rocksdb::DB> db);
   bool is_space_loaded(const std::string& name) const;
   std::filesystem::path base_path_;
-  std::unique_ptr<rocksdb::DB> db_;
+  std::shared_ptr<rocksdb::DB> db_;
   std::unordered_map<std::string, std::shared_ptr<Space>> loaded_spaces_;
 };
 }  // namespace embedding

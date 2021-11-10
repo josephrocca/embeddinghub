@@ -7,6 +7,7 @@
 #include <filesystem>
 
 #include "embeddingstore/embedding_store_meta.pb.h"
+#include "iterator.h"
 #include "rocksdb/db.h"
 
 namespace featureform {
@@ -20,12 +21,12 @@ std::shared_ptr<Space> Space::load_or_create(const std::filesystem::path& path,
   options.create_if_missing = true;
   rocksdb::DB* db_ptr;
   rocksdb::Status status = rocksdb::DB::Open(options, path, &db_ptr);
-  std::unique_ptr<rocksdb::DB> db(db_ptr);
+  std::shared_ptr<rocksdb::DB> db(db_ptr);
   return std::shared_ptr<Space>(new Space(path, std::move(db)));
 }
 
-Space::Space(std::filesystem::path base_path, std::unique_ptr<rocksdb::DB> db)
-    : base_path_{base_path}, db_{std::move(db)}, loaded_versions_{} {}
+Space::Space(std::filesystem::path base_path, std::shared_ptr<rocksdb::DB> db)
+    : base_path_{base_path}, db_{db}, loaded_versions_{} {}
 
 std::shared_ptr<Version> Space::create_version(const std::string& name,
                                                int dims) {
@@ -77,6 +78,8 @@ bool Space::is_version_loaded(const std::string& name) const {
 bool Space::operator==(const Space& other) const {
   return base_path_ == other.base_path_ && name_ == other.name_;
 }
+
+Iterator Space::iterator() const { return Iterator(db_); }
 
 }  // namespace embedding
 }  // namespace featureform

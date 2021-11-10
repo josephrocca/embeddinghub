@@ -22,6 +22,8 @@ using ::featureform::embedding::proto::FreezeSpaceRequest;
 using ::featureform::embedding::proto::FreezeSpaceResponse;
 using ::featureform::embedding::proto::GetRequest;
 using ::featureform::embedding::proto::GetResponse;
+using ::featureform::embedding::proto::ListEntriesRequest;
+using ::featureform::embedding::proto::ListEntriesResponse;
 using ::featureform::embedding::proto::MultiGetRequest;
 using ::featureform::embedding::proto::MultiGetResponse;
 using ::featureform::embedding::proto::MultiSetRequest;
@@ -30,6 +32,8 @@ using ::featureform::embedding::proto::NearestNeighborRequest;
 using ::featureform::embedding::proto::NearestNeighborResponse;
 using ::featureform::embedding::proto::SetRequest;
 using ::featureform::embedding::proto::SetResponse;
+using ::featureform::embedding::proto::SpaceEntry;
+using ::featureform::embedding::proto::VersionEntry;
 using ::grpc::Server;
 using ::grpc::ServerBuilder;
 using ::grpc::ServerContext;
@@ -219,6 +223,44 @@ grpc::Status EmbeddingHubService::Download(
     writer->Write(resp);
   }
 
+  return Status::OK;
+}
+
+grpc::Status EmbeddingHubService::ListEntries(
+    grpc::ServerContext* context, const proto::ListEntriesRequest* request,
+    grpc::ServerWriter<proto::ListEntriesResponse>* writer) {
+  std::unique_lock<std::mutex> lock(mtx_);
+  auto space_iter = store_->iterator();
+  while (iter.scan()) {
+    ListEntriesResponse resp;
+    SpaceEntry space_entry;
+    auto space_name = iter.key();
+    auto space_opt = store_->get_space(space_name);
+    auto name_length = space_name.length();
+    space_entry.set_name(space_name);
+    space_entry.set_default_version(DEFAULT_VERSION);
+    space_entry.set_path(space_opt.value()->base_path());
+    resp.set_space(space_entry);
+    auto version_iter = space_opt.value()->iterator();
+    while (version_iter.scan()) {
+      auto version_opt = space_opt.value()->get_version(
+          version_iter.key().substr(name_length + 1));
+      VersionEntry ver_entry;
+      ver_entry.set_path(space_opt.value()->base_path());
+      ver_entry.set_dims(version_opt.value()->dims());
+      ver_entry.set_space(version_opt.value()->space());
+      ver_entry.set_name(version_opt.value()->name());
+      ver_entry.set_description("placeholder description");
+      ver_entry.set_owner("placeholder owner");
+      for (int i = 0; i < 3; i++) {
+        ver_entry.add_tags("tag " + i);
+      }
+      ver_entry.set_created("01-01-2000");
+      ver_entry.set_revision("01-01-2000");
+      resp.add_version_entry(ver_entry);
+    }
+    writer->Write(resp);
+  }
   return Status::OK;
 }
 

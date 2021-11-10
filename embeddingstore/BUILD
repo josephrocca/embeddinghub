@@ -36,6 +36,8 @@ cc_library(
     deps = [
         ":embedding_store",
         ":embedding_store_grpc",
+        ":embedding_store_meta",
+        ":embedding_store_meta_grpc",
         "@com_github_grpc_grpc//:grpc++",
         "@com_github_grpc_grpc//:grpc++_reflection",
     ],
@@ -132,6 +134,13 @@ cc_grpc_library(
     srcs = [":embedding_store_proto"],
     grpc_only = True,
     deps = [":embedding_store_cc_proto"],
+)
+
+cc_grpc_library(
+    name="embedding_store_meta_grpc",
+    srcs = [":embedding_store_meta_proto"],
+    grpc_only = True,
+    deps = [":embedding_store_meta_cc_proto"],
 )
 
 proto_library(

@@ -8,6 +8,8 @@
 
 #include "embeddingstore/embedding_store.grpc.pb.h"
 #include "embeddingstore/embedding_store.h"
+#include "embeddingstore/embedding_store_meta.grpc.pb.h"
+#include "embeddingstore/embedding_store_meta.pb.h"
 
 namespace featureform {
 
@@ -50,6 +52,10 @@ class EmbeddingHubService final : public proto::EmbeddingHub::Service {
   grpc::Status Download(
       grpc::ServerContext* context, const proto::DownloadRequest* request,
       grpc::ServerWriter<proto::DownloadResponse>* writer) override;
+
+  grpc::Status ListEntries(
+      grpc::ServerContext* context, const proto::ListEntriesRequest* request,
+      grpc::ServerWriter<proto::ListEntriesResponse>* writer) override;
 
  private:
   std::optional<std::shared_ptr<Version>> GetVersion(

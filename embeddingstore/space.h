@@ -9,7 +9,9 @@
 #include <optional>
 #include <unordered_map>
 
+#include "iterator.h"
 #include "version.h"
+
 
 namespace featureform {
 
@@ -28,7 +30,7 @@ class Space {
   bool is_version_loaded(const std::string& name) const;
   std::filesystem::path base_path_;
   std::string name_;
-  std::unique_ptr<rocksdb::DB> db_;
+  std::shared_ptr<rocksdb::DB> db_;
   std::unordered_map<std::string, std::shared_ptr<Version>> loaded_versions_;
 };
 }  // namespace embedding

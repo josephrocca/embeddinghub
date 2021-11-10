@@ -22,7 +22,7 @@ std::shared_ptr<Space> Space::load_or_create(const std::filesystem::path& path,
   rocksdb::DB* db_ptr;
   rocksdb::Status status = rocksdb::DB::Open(options, path, &db_ptr);
   std::shared_ptr<rocksdb::DB> db(db_ptr);
-  return std::shared_ptr<Space>(new Space(path, std::move(db)));
+  return std::shared_ptr<Space>(new Space(path, db));
 }
 
 Space::Space(std::filesystem::path base_path, std::shared_ptr<rocksdb::DB> db)
@@ -78,6 +78,8 @@ bool Space::is_version_loaded(const std::string& name) const {
 bool Space::operator==(const Space& other) const {
   return base_path_ == other.base_path_ && name_ == other.name_;
 }
+
+std::string Space::base_path() const { return base_path_; }
 
 Iterator Space::iterator() const { return Iterator(db_); }
 

@@ -6,10 +6,6 @@ syntax = "proto3";
 
 package featureform.embedding.proto;
 
-service EmbeddingHubMeta {
-  rpc ListEntries(ListEntriesRequest) returns (stream ListEntriesResponse) {}
-}
-
 message ListEntriesRequest {
   //purposely empty
 }

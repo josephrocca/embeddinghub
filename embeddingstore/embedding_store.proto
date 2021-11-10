@@ -6,6 +6,8 @@ syntax = "proto3";
 
 package featureform.embedding.proto;
 
+import "embeddingstore/embedding_store_meta.proto";
+
 service EmbeddingHub {
   rpc CreateSpace(CreateSpaceRequest) returns (CreateSpaceResponse) {}
   rpc FreezeSpace(FreezeSpaceRequest) returns (FreezeSpaceResponse) {}
@@ -15,6 +17,7 @@ service EmbeddingHub {
   rpc MultiGet(stream MultiGetRequest) returns (stream MultiGetResponse) {}
   rpc NearestNeighbor(NearestNeighborRequest)  returns (NearestNeighborResponse) {}
   rpc Download(DownloadRequest) returns (stream DownloadResponse) {}
+  rpc ListEntries(ListEntriesRequest) returns (stream ListEntriesResponse) {}
 }
 
 message CreateSpaceRequest {

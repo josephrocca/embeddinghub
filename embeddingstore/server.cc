@@ -236,7 +236,6 @@ grpc::Status EmbeddingHubService::ListEntries(
     std::unique_ptr<SpaceEntry> space_entry(new SpaceEntry());
     auto space_name = space_iter.key();
     auto space_opt = store_->get_space(space_name);
-    std::cout << space_name << std::endl;
     space_entry->set_name(space_name);
     space_entry->set_default_version(DEFAULT_VERSION);
     space_entry->set_path(space_opt.value()->base_path());

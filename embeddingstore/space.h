@@ -12,7 +12,6 @@
 #include "iterator.h"
 #include "version.h"
 
-
 namespace featureform {
 
 namespace embedding {
@@ -23,10 +22,12 @@ class Space {
       const std::filesystem::path& path, const std::string& name);
   std::optional<std::shared_ptr<Version>> get_version(const std::string& name);
   std::shared_ptr<Version> create_version(const std::string& name, int dims);
+  std::string base_path() const;
   bool operator==(const Space& other) const;
+  Iterator iterator() const;
 
  private:
-  Space(std::filesystem::path base_path, std::unique_ptr<rocksdb::DB> db);
+  Space(std::filesystem::path base_path, std::shared_ptr<rocksdb::DB> db);
   bool is_version_loaded(const std::string& name) const;
   std::filesystem::path base_path_;
   std::string name_;

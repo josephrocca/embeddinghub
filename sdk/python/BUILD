@@ -50,7 +50,7 @@ py_proto_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = ["//embeddingstore:embedding_store_proto"],
+    deps = ["//embeddingstore:embedding_store_proto","//embeddingstore:embedding_store_meta_proto"],
 )
 
 filegroup(

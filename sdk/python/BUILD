@@ -42,7 +42,7 @@ py_grpc_library(
     visibility = [
         "//visibility:public",
     ],
-    deps = [":embedding_store_py_proto"],
+    deps = [":embedding_store_py_proto","embedding_store_meta_py_proto"],
 )
 
 py_proto_library(
@@ -51,6 +51,14 @@ py_proto_library(
         "//visibility:public",
     ],
     deps = ["//embeddingstore:embedding_store_proto","//embeddingstore:embedding_store_meta_proto"],
+)
+
+py_proto_library(
+    name = "embedding_store_meta_py_proto",
+    visibility = [
+        "//visibility:public",
+    ],
+    deps = ["//embeddingstore:embedding_store_meta_proto"],
 )
 
 filegroup(

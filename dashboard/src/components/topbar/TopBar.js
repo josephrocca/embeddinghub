@@ -109,7 +109,7 @@ export default function TopBar() {
             <div className={classes.instanceName}>
               <img
                 className={classes.instanceLogo}
-                src="/Capital_One_logo.svg"
+                src="/ING_Group_N.V._Logo.svg"
               />
             </div>
             {auth && (
